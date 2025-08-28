@@ -24,6 +24,7 @@ def generate_sample_trades():
     for strategy in strategies:
         trades = []
         current_time = base_time
+        positions = {}  # Track positions to avoid selling what we don't own
         
         # Generate 20-30 trades per strategy
         num_trades = random.randint(20, 30)
@@ -36,8 +37,31 @@ def generate_sample_trades():
             current_time += time_delta
             
             symbol = random.choice(symbols)
-            side = random.choice(['buy', 'sell'])
+            
+            # Smarter trade logic - more realistic
+            if symbol not in positions or positions[symbol] <= 0:
+                # No position or short - prefer buying
+                side = 'buy' if random.random() < 0.8 else 'sell'
+            else:
+                # Have position - can buy more or sell
+                side = random.choice(['buy', 'sell'])
+            
             qty = random.randint(1, 10)
+            
+            # Update position tracking
+            if symbol not in positions:
+                positions[symbol] = 0
+            
+            if side == 'buy':
+                positions[symbol] += qty
+            else:  # sell
+                # Don't sell more than we have (prevent impossible trades)
+                if positions[symbol] > 0:
+                    qty = min(qty, positions[symbol])
+                    positions[symbol] -= qty
+                else:
+                    # If no position, make it a small short position
+                    positions[symbol] -= qty
             
             # Price based on symbol (roughly realistic)
             base_prices = {
@@ -49,7 +73,9 @@ def generate_sample_trades():
             }
             
             base_price = base_prices.get(symbol, 100)
-            price = base_price + random.uniform(-5, 5)
+            # Add slight upward trend + randomness (simulate growth market)
+            trend_factor = 1 + (i / num_trades) * 0.05  # 5% upward trend over time
+            price = base_price * trend_factor + random.uniform(-3, 5)  # Slight upward bias
             
             trades.append({
                 'ts': current_time.isoformat(),
