@@ -9,6 +9,7 @@ import random
 import sys
 import os
 from datetime import datetime, timedelta, timezone
+import shutil
 
 # Add project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -75,7 +76,7 @@ def log_trade(strategy_id, symbol, side, qty, price):
             w.writerow(['ts','symbol','side','qty','price'])
         w.writerow([datetime.datetime.utcnow().isoformat(), symbol, side, qty, price])
 
-def main_offline(symbols: list[str], cycles: int = 5, sleep_sec: int = 30, seed: str | None = None, accel: bool = False, step: int = 1):
+def main_offline(symbols: list[str], cycles: int = 5, sleep_sec: int = 30, seed: str | None = None, accel: bool = False, step: int = 1, clear_logs: bool = False, persist_seed: bool = False):
     """Run trading engine with sample data (offline mode).
 
     symbols: list of ticker strings to load from storage/sample_bars
@@ -89,6 +90,26 @@ def main_offline(symbols: list[str], cycles: int = 5, sleep_sec: int = 30, seed:
     book = StrategyBook()
     broker_map = {}
     plan = load_plan()
+
+    # Optionally archive existing CSV logs to avoid confusing persisted seed/fill history
+    if clear_logs:
+        logs_dir = Path('storage/logs')
+        if logs_dir.exists():
+            csvs = list(logs_dir.glob('*.csv'))
+            if csvs:
+                timestamp = now_utc().strftime('%Y%m%d_%H%M%S')
+                backup_dir = Path(f'storage/logs_backup_{timestamp}')
+                backup_dir.mkdir(parents=True, exist_ok=True)
+                for f in csvs:
+                    try:
+                        shutil.move(str(f), str(backup_dir / f.name))
+                    except Exception as e:
+                        print(f"⚠️ Failed to move {f}: {e}")
+                print(f"📦 Archived {len(csvs)} log files to {backup_dir}")
+            else:
+                print("ℹ️ No CSV logs found to archive")
+        else:
+            print("ℹ️ No logs directory found to archive")
 
     # Strategy registry
     registry = {
@@ -129,7 +150,13 @@ def main_offline(symbols: list[str], cycles: int = 5, sleep_sec: int = 30, seed:
                 seed_price = float(bars[seed_symbol].iloc[ptr]['close'])
                 # create a synthetic buy fill for strategy 'XGB' to seed inventory
                 book.update_on_fill('XGB', seed_symbol, 'buy', seed_qty, seed_price)
-                print(f"🪴 Seeded {seed_qty} {seed_symbol} @ ${seed_price:.2f} for strategy XGB (ptr={ptr})")
+                # By default the seed fill is synthetic and NOT written to persistent trade logs.
+                # If the user explicitly requests persistence (for debugging), use --persist-seed.
+                if persist_seed:
+                    log_trade('XGB', seed_symbol, 'buy', seed_qty, seed_price)
+                    print(f"🪴 Seeded {seed_qty} {seed_symbol} @ ${seed_price:.2f} for strategy XGB (ptr={ptr}) — persisted to logs")
+                else:
+                    print(f"🪴 Seeded {seed_qty} {seed_symbol} @ ${seed_price:.2f} for strategy XGB (ptr={ptr}) — synthetic only (not persisted)")
             else:
                 print(f"⚠️ Cannot seed, no data for {seed_symbol}")
         except Exception as e:
@@ -289,11 +316,13 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=str, default=None, help="Optional seed position as SYMBOL:QTY (e.g. SPY:100)")
     parser.add_argument("--accel", action="store_true", help="Run accelerated replay (advance pointers without sleeping)")
     parser.add_argument("--step", type=int, default=1, help="Number of bars to advance per cycle when accelerated")
+    parser.add_argument("--clear-logs", action="store_true", help="Archive existing storage/logs/*.csv before running to avoid persisted fills showing up")
+    parser.add_argument("--persist-seed", action="store_true", help="If set, write synthetic seed fills to storage/logs (default: do not persist seeds)")
     args = parser.parse_args()
 
     if args.offline:
         symbols = [s.strip().upper() for s in args.symbols.split(',') if s.strip()]
-        main_offline(symbols=symbols, cycles=args.cycles, sleep_sec=args.sleep, seed=args.seed, accel=args.accel, step=args.step)
+        main_offline(symbols=symbols, cycles=args.cycles, sleep_sec=args.sleep, seed=args.seed, accel=args.accel, step=args.step, clear_logs=args.clear_logs, persist_seed=args.persist_seed)
     else:
         print("Use --offline flag to run offline mode")
         print("Example: python engine/live_offline.py --offline --symbols SPY --cycles 3")
