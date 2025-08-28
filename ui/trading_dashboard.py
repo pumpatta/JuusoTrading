@@ -83,6 +83,68 @@ def load_trade_logs() -> Dict[str, pd.DataFrame]:
     
     return logs
 
+def calculate_account_performance(trade_logs: Dict[str, pd.DataFrame], starting_nav: float = 100000) -> Dict[str, pd.DataFrame]:
+    """Calculate individual account performance"""
+    account_performance = {}
+    
+    # Map strategies to accounts
+    strategy_to_account = {
+        'EMA': 'Account A - EMA',
+        'XGB': 'Account B - XGB', 
+        'ACCOUNT_C_ML': 'Account C - Enhanced ML'
+    }
+    
+    for strategy, trades in trade_logs.items():
+        if trades.empty:
+            continue
+            
+        account_name = strategy_to_account.get(strategy, f'Account {strategy}')
+        
+        # Calculate running P&L for this account
+        portfolio_value = starting_nav
+        portfolio_history = []
+        current_positions = {}  # symbol -> (qty, avg_price)
+        
+        for _, trade in trades.iterrows():
+            symbol = trade['symbol']
+            side = trade['side']
+            qty = trade['qty']
+            price = trade['price']
+            
+            if side == 'buy':
+                if symbol in current_positions:
+                    old_qty, old_price = current_positions[symbol]
+                    new_qty = old_qty + qty
+                    new_avg_price = ((old_qty * old_price) + (qty * price)) / new_qty
+                    current_positions[symbol] = (new_qty, new_avg_price)
+                else:
+                    current_positions[symbol] = (qty, price)
+                portfolio_value -= qty * price
+                
+            elif side == 'sell':
+                if symbol in current_positions:
+                    old_qty, avg_price = current_positions[symbol]
+                    if old_qty >= qty:
+                        realized_pnl = qty * (price - avg_price)
+                        portfolio_value += qty * price
+                        new_qty = old_qty - qty
+                        if new_qty > 0:
+                            current_positions[symbol] = (new_qty, avg_price)
+                        else:
+                            del current_positions[symbol]
+            
+            portfolio_history.append({
+                'date': trade['ts'],
+                'portfolio_value': portfolio_value,
+                'total_pnl': portfolio_value - starting_nav,
+                'daily_return': ((portfolio_value - starting_nav) / starting_nav) * 100
+            })
+        
+        if portfolio_history:
+            account_performance[account_name] = pd.DataFrame(portfolio_history)
+    
+    return account_performance
+
 def calculate_portfolio_performance(trade_logs: Dict[str, pd.DataFrame], starting_nav: float = 100000) -> pd.DataFrame:
     """Calculate portfolio performance over time"""
     all_trades = []
@@ -321,6 +383,7 @@ def main():
         trade_logs = load_trade_logs()
         benchmark_df = load_benchmark_data(selected_benchmarks, days_back) if selected_benchmarks else pd.DataFrame()
         portfolio_df = calculate_portfolio_performance(trade_logs)
+        account_performance = calculate_account_performance(trade_logs)
     
     # Main metrics
     col1, col2, col3, col4 = st.columns(4)
@@ -366,30 +429,88 @@ def main():
     
     if not portfolio_df.empty or not benchmark_df.empty:
         fig = create_performance_chart(portfolio_df, benchmark_df)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     else:
         st.info("Ei vielä kaupankäyntidataa näytettäväksi.")
     
-    # Strategy performance breakdown
-    if trade_logs:
-        st.subheader("🎯 Strategioiden Suorituskyky")
+    # Individual Account Performance
+    st.markdown("---")
+    st.subheader("🏦 Tilien Erillinen Suorituskyky")
+    
+    if account_performance:
+        # Create tabs for each account
+        account_names = list(account_performance.keys())
+        tabs = st.tabs(account_names)
         
-        strategy_cols = st.columns(len(trade_logs))
-        for i, (strategy, trades) in enumerate(trade_logs.items()):
-            with strategy_cols[i]:
-                st.write(f"**{strategy}**")
-                if not trades.empty:
-                    trade_count = len(trades)
-                    latest_trade = trades['ts'].max().strftime("%Y-%m-%d %H:%M")
+        for i, (account_name, perf_data) in enumerate(account_performance.items()):
+            with tabs[i]:
+                if not perf_data.empty:
+                    # Account metrics
+                    col1, col2, col3, col4 = st.columns(4)
                     
-                    # Calculate strategy P&L (simplified)
-                    buy_volume = trades[trades['side'] == 'buy']['qty'].sum() * trades[trades['side'] == 'buy']['price'].mean() if any(trades['side'] == 'buy') else 0
-                    sell_volume = trades[trades['side'] == 'sell']['qty'].sum() * trades[trades['side'] == 'sell']['price'].mean() if any(trades['side'] == 'sell') else 0
+                    current_value = perf_data['portfolio_value'].iloc[-1]
+                    total_pnl = perf_data['total_pnl'].iloc[-1]
+                    total_return_pct = (total_pnl / 100000) * 100
+                    trade_count = len(perf_data)
                     
-                    st.metric(f"Kauppoja", trade_count)
-                    st.write(f"Viimeisin: {latest_trade}")
+                    with col1:
+                        st.metric("💰 Tilin Arvo", f"€{current_value:,.2f}")
+                    with col2:
+                        st.metric("📊 P&L", f"€{total_pnl:,.2f}", f"{total_return_pct:+.2f}%")
+                    with col3:
+                        if len(perf_data) > 1:
+                            recent_return = perf_data['daily_return'].iloc[-1]
+                            st.metric("📈 Tuotto %", f"{recent_return:.2f}%")
+                        else:
+                            st.metric("📈 Tuotto %", "0.00%")
+                    with col4:
+                        st.metric("🔄 Kauppoja", f"{trade_count}")
+                    
+                    # Account performance chart
+                    fig_account = go.Figure()
+                    
+                    # Portfolio value line
+                    fig_account.add_trace(go.Scatter(
+                        x=perf_data['date'],
+                        y=perf_data['portfolio_value'],
+                        mode='lines',
+                        name=f'{account_name} Arvo',
+                        line=dict(color='#1f77b4', width=3)
+                    ))
+                    
+                    # Starting value reference line
+                    fig_account.add_hline(y=100000, line_dash="dash", line_color="gray", 
+                                        annotation_text="Aloitusarvo (100k)")
+                    
+                    fig_account.update_layout(
+                        title=f"{account_name} - Portfolion Kehitys",
+                        xaxis_title="Päivämäärä",
+                        yaxis_title="Portfolion Arvo (€)",
+                        height=400,
+                        showlegend=True
+                    )
+                    
+                    st.plotly_chart(fig_account, width='stretch')
                 else:
-                    st.write("Ei kauppoja")
+                    st.info(f"Ei vielä kaupankäyntidataa tilille {account_name}")
+    else:
+        # Show placeholder for accounts
+        col1, col2, col3 = st.columns(3)
+        
+        accounts_info = [
+            ("Account A - EMA", "EMA Trend Strategy", "100k"),
+            ("Account B - XGB", "XGBoost ML Strategy", "100k"), 
+            ("Account C - Enhanced ML", "ML + News Sentiment", "100k")
+        ]
+        
+        for i, (name, strategy, capital) in enumerate(accounts_info):
+            with [col1, col2, col3][i]:
+                st.write(f"**{name}**")
+                st.write(f"Strategia: {strategy}")
+                st.write(f"Pääoma: €{capital}")
+                st.metric("Arvo", f"€100,000.00")
+                st.metric("P&L", "€0.00", "0.00%")
+                st.info("Ei vielä kaupankäyntidataa")
     
     st.markdown("---")
     
@@ -401,7 +522,7 @@ def main():
         # Show last 20 trades
         st.dataframe(
             trades_df.head(20),
-            use_container_width=True,
+            width='stretch',
             hide_index=True
         )
         
