@@ -143,7 +143,19 @@ def calculate_account_performance(trade_logs: Dict[str, pd.DataFrame], starting_
         if portfolio_history:
             account_performance[account_name] = pd.DataFrame(portfolio_history)
     
-    return account_performance
+    # Return accounts in A, B, C order
+    ordered_performance = {}
+    account_order = [
+        'Account A - EMA',
+        'Account B - XGB', 
+        'Account C - Enhanced ML'
+    ]
+    
+    for account_name in account_order:
+        if account_name in account_performance:
+            ordered_performance[account_name] = account_performance[account_name]
+    
+    return ordered_performance
 
 def calculate_portfolio_performance(trade_logs: Dict[str, pd.DataFrame], starting_nav: float = 100000) -> pd.DataFrame:
     """Calculate portfolio performance over time"""
