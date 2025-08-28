@@ -1,18 +1,18 @@
-# Capital is limited. Enable only what you can fund.
+# Each account has 100k capital, use full allocation per account
 # label: A=classic, B=ML, C=ML+external/features
 strategies:
   - id: EMA
     label: A
     enabled: true
-    capital_pct: 0.30   # 30% of NAV
+    capital_pct: 1.0   # 100% of Account A (100k)
   - id: XGB
     label: B
     enabled: true
-    capital_pct: 0.30
+    capital_pct: 1.0   # 100% of Account B (100k)
   - id: ACCOUNT_C_ML
     label: C
     enabled: true
-    capital_pct: 0.40   # 40% - Advanced ML with news sentiment
+    capital_pct: 1.0   # 100% of Account C (100k) - Advanced ML with news sentiment
   # Legacy C strategies - disabled in favor of integrated ACCOUNT_C_ML
   - id: HNS
     label: C
