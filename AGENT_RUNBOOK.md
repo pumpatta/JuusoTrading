@@ -127,6 +127,8 @@ Next tasks for a coding agent (priority order)
   - Modify `scripts/retrain.py` to accept `--account A|B|C` flag
   - Save models as `models/{account}_{strategy}.model`
   - Update strategy classes to load from account-specific files
+
+- [x] Implement per-account model serialization (scripts/retrain.py now supports --account and strategies save/load `models/{account}_{strategy}.model`).
   
 - B) Create per-account logging structure:
   - Ensure logs write to `storage/logs/{account}/`
@@ -136,6 +138,8 @@ Next tasks for a coding agent (priority order)
 - C) Add diagnostics harness (`scripts/diagnostics.py`):
   - Run compile, import, smoke tests in sequence
   - Write results to `storage/logs/diagnostics/`
+
+- [x] Add diagnostics harness (`scripts/diagnostics.py`) — runs import checks, `check_models_loadable.py`, and smoke tests when `pytest` present.
   
 - D) Test live paper trading:
   - Validate actual Alpaca API connections work
