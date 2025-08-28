@@ -270,15 +270,24 @@ def create_trades_table(trade_logs: Dict[str, pd.DataFrame]) -> pd.DataFrame:
 def main():
     # Header
     st.title("📈 JuusoTrader - Kaupankäynti Dashboard")
+    
+    # System status check
+    import os
+    trade_logs_exist = os.path.exists("storage/logs") and len(os.listdir("storage/logs")) > 0
+    
+    if trade_logs_exist:
+        st.success("✅ Kaupankäyntijärjestelmä on aktiivinen")
+    else:
+        st.warning("⚠️ Live engine ei ole käynnissä - näytetään demo-data")
+        st.info("💡 Käynnistä kaupankäynti: `python launch_nonblocking.py`")
+    
     st.markdown("---")
     
     # Sidebar
     st.sidebar.header("⚙️ Asetukset")
     
     # Auto-refresh toggle
-    auto_refresh = st.sidebar.checkbox("Automaattinen päivitys (30s)", value=True)
-    if auto_refresh:
-        st.rerun()
+    auto_refresh = st.sidebar.checkbox("Automaattinen päivitys (30s)", value=False)
     
     # Manual refresh button
     if st.sidebar.button("🔄 Päivitä nyt"):
@@ -415,20 +424,20 @@ def main():
     
     with account_col1:
         st.write("**Tili A - Klassinen**")
-        st.write("✅ EMA Trend (35% pääoma)")
+        st.write("✅ EMA Trend (100k pääoma)")
         st.write("Status: Aktiivinen")
     
     with account_col2:
         st.write("**Tili B - ML**") 
-        st.write("✅ XGBoost Classifier (35% pääoma)")
-        st.write("❌ TCN Neural Network (ei käytössä)")
+        st.write("✅ XGBoost Classifier (100k pääoma)")
         st.write("Status: Aktiivinen")
     
     with account_col3:
-        st.write("**Tili C - ML+Features**")
-        st.write("❌ Head & Shoulders (ei käytössä)")
-        st.write("❌ Ensemble (ei käytössä)")
-        st.write("Status: Ei aktiivista")
+        st.write("**Tili C - Enhanced ML**")
+        st.write("✅ ML + News Sentiment (100k pääoma)")
+        st.write("✅ Pattern Recognition")
+        st.write("✅ Ensemble Methods")
+        st.write("Status: Aktiivinen")
     
     # Footer
     st.markdown("---")
