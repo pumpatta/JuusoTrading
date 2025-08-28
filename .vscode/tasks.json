@@ -1,0 +1,8 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "Bootstrap", "type": "shell", "command": "${workspaceFolder}/.venv/Scripts/python.exe", "args": ["scripts/bootstrap.py"], "group": "build" },
+    { "label": "Live (paper)", "type": "shell", "command": "${workspaceFolder}/.venv/Scripts/python.exe", "args": ["engine/live.py", "--paper"], "group": "test" },
+    { "label": "Retrain", "type": "shell", "command": "${workspaceFolder}/.venv/Scripts/python.exe", "args": ["scripts/retrain.py"], "group": "build" }
+  ]
+}

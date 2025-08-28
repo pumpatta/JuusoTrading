@@ -1,0 +1,167 @@
+# JuusoTrader .gitignore - Suojaa arkaluonteiset tiedot
+
+# ===============================
+# KRIITTISET - ÄLÄ COMMITOI!
+# ===============================
+
+# API avaimet ja salaisuudet
+.env
+*.env
+.env.*
+config/api_keys.json
+config/secrets.json
+config/credentials.json
+config/alpaca_keys.json
+
+# Alpaca konfiguraatio sisältää API avaimet
+config/execution.yml
+
+# Production deployment tiedot (sisältää API avaimet)
+config/production_deployment.json
+
+# ===============================
+# HENKILÖKOHTAISET TIEDOT
+# ===============================
+
+# Kaupankäyntilokitiedostot (sisältää positioita ja tuloksia)
+storage/logs/
+*.csv
+storage/logs/*.csv
+storage/backtest_report.json
+storage/enhanced_backtest_report.json
+storage/market_regime_report.json
+storage/signal_analysis_report.json
+
+# ML learning data (voi sisältää strategiatietoja)
+storage/ml_learning_data.json
+
+# Henkilökohtaiset mallit ja data
+models/*.model
+models/*.trained
+*.pkl
+*.joblib
+
+# Sample market data (voi olla proprietary)
+storage/sample_bars/*.csv
+
+# ===============================
+# PYTHON JA KEHITYSYMPÄRISTÖ
+# ===============================
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+env/
+.env/
+
+# IDE files
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ===============================
+# LOGS JA TEMPORARY
+# ===============================
+
+# Logs
+*.log
+logs/
+*.out
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# ===============================
+# JUPYTER JA NOTEBOOKS
+# ===============================
+
+.ipynb_checkpoints/
+*.ipynb
+
+# ===============================
+# DOKUMENTAATIO (SALLITTU)
+# ===============================
+
+# Sallitaan dokumentaatio ja README tiedostot
+!README.md
+!KÄYNNISTYS.md
+!DASHBOARD_GUIDE.md
+!AGENT_RUNBOOK.md
+!requirements.txt
+!*.md
+
+# ===============================
+# KONFIGURAATIO (VAIN TEMPLATE)
+# ===============================
+
+# Sallitaan template konfiguraatiot ilman avaimia
+!config/market.yml
+!config/optimization.yml
+!config/risk.yml
+!config/strategies.yml
+!config/universe.yml
+
+# ===============================
+# PUBLIC SCRIPTS JA KOODI
+# ===============================
+
+# Sallitaan julkinen koodi
+!scripts/
+!engine/
+!strategies/
+!utils/
+!ui/
+!features/
+!*.py
+!*.bat
+!*.ps1
+
+# Mutta ei henkilökohtaisia konfiguraatioita scripteissä
+scripts/config_personal.py
+scripts/api_setup.py

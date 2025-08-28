@@ -1,0 +1,227 @@
+tickers:
+  - symbol: AAPL
+    enabled: true
+  - symbol: MSFT
+    enabled: true
+  - symbol: NVDA
+    enabled: true
+  - symbol: AMZN
+    enabled: true
+  - symbol: GOOGL
+    enabled: true
+  - symbol: META
+    enabled: true
+  - symbol: TSLA
+    enabled: true
+  - symbol: BRK.B
+    enabled: true
+  - symbol: UNH
+    enabled: true
+  - symbol: JNJ
+    enabled: true
+  - symbol: JPM
+    enabled: true
+  - symbol: V
+    enabled: true
+  - symbol: XOM
+    enabled: true
+  - symbol: PG
+    enabled: true
+  - symbol: AVGO
+    enabled: true
+  - symbol: LLY
+    enabled: true
+  - symbol: CVX
+    enabled: true
+  - symbol: HD
+    enabled: true
+  - symbol: MRK
+    enabled: true
+  - symbol: PEP
+    enabled: true
+  - symbol: ABBV
+    enabled: true
+  - symbol: BAC
+    enabled: true
+  - symbol: KO
+    enabled: true
+  - symbol: PFE
+    enabled: true
+  - symbol: COST
+    enabled: true
+  - symbol: WMT
+    enabled: true
+  - symbol: DIS
+    enabled: true
+  - symbol: CSCO
+    enabled: true
+  - symbol: ACN
+    enabled: true
+  - symbol: VZ
+    enabled: true
+  - symbol: ADBE
+    enabled: true
+  - symbol: NFLX
+    enabled: true
+  - symbol: TMO
+    enabled: true
+  - symbol: ABT
+    enabled: true
+  - symbol: INTC
+    enabled: true
+  - symbol: CMCSA
+    enabled: true
+  - symbol: CRM
+    enabled: true
+  - symbol: WFC
+    enabled: true
+  - symbol: TXN
+    enabled: true
+  - symbol: LIN
+    enabled: true
+  - symbol: DHR
+    enabled: true
+  - symbol: MCD
+    enabled: true
+  - symbol: NEE
+    enabled: true
+  - symbol: AMD
+    enabled: true
+  - symbol: PM
+    enabled: true
+  - symbol: RTX
+    enabled: true
+  - symbol: HON
+    enabled: true
+  - symbol: UNP
+    enabled: true
+  - symbol: GS
+    enabled: true
+  - symbol: AMGN
+    enabled: true
+  - symbol: IBM
+    enabled: true
+  - symbol: CAT
+    enabled: true
+  - symbol: CVS
+    enabled: true
+  - symbol: GE
+    enabled: true
+  - symbol: MS
+    enabled: true
+  - symbol: LOW
+    enabled: true
+  - symbol: INTU
+    enabled: true
+  - symbol: MDT
+    enabled: true
+  - symbol: ORCL
+    enabled: true
+  - symbol: AMAT
+    enabled: true
+  - symbol: BLK
+    enabled: true
+  - symbol: NOW
+    enabled: true
+  - symbol: AXP
+    enabled: true
+  - symbol: LMT
+    enabled: true
+  - symbol: SPGI
+    enabled: true
+  - symbol: BA
+    enabled: true
+  - symbol: BKNG
+    enabled: true
+  - symbol: PLD
+    enabled: true
+  - symbol: C
+    enabled: true
+  - symbol: SYK
+    enabled: true
+  - symbol: ISRG
+    enabled: true
+  - symbol: QCOM
+    enabled: true
+  - symbol: COP
+    enabled: true
+  - symbol: DE
+    enabled: true
+  - symbol: T
+    enabled: true
+  - symbol: AMT
+    enabled: true
+  - symbol: ELV
+    enabled: true
+  - symbol: ADP
+    enabled: true
+  - symbol: BDX
+    enabled: true
+  - symbol: GILD
+    enabled: true
+  - symbol: MO
+    enabled: true
+  - symbol: MU
+    enabled: true
+  - symbol: USB
+    enabled: true
+  - symbol: CCI
+    enabled: true
+  - symbol: MDLZ
+    enabled: true
+  - symbol: REGN
+    enabled: true
+  - symbol: MMC
+    enabled: true
+  - symbol: ADI
+    enabled: true
+  - symbol: CI
+    enabled: true
+  - symbol: PGR
+    enabled: true
+  - symbol: CB
+    enabled: true
+  - symbol: SO
+    enabled: true
+  - symbol: CME
+    enabled: true
+  - symbol: PNC
+    enabled: true
+  - symbol: DUK
+    enabled: true
+  - symbol: SCHW
+    enabled: true
+  - symbol: EQIX
+    enabled: true
+  - symbol: TGT
+    enabled: true
+  - symbol: SHW
+    enabled: true
+  - symbol: ZTS
+    enabled: true
+  - symbol: ICE
+    enabled: true
+  - symbol: APD
+    enabled: true
+  - symbol: CL
+    enabled: true
+  - symbol: SPY
+    enabled: true
+  - symbol: QQQ
+    enabled: true
+  - symbol: IWM
+    enabled: true
+  - symbol: DIA
+    enabled: true
+  - symbol: XLF
+    enabled: true
+  - symbol: XLK
+    enabled: true
+  - symbol: XLE
+    enabled: true
+  - symbol: VIXY
+    enabled: true
+  - symbol: HYG
+    enabled: true
+  - symbol: NYA
+    enabled: true

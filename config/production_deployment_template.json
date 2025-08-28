@@ -1,0 +1,40 @@
+{
+  "description": "Production deployment configuration template",
+  "note": "COPY THIS FILE AND FILL IN YOUR ACTUAL API KEYS",
+  "alpaca": {
+    "paper_trading": true,
+    "api_key": "YOUR_ALPACA_API_KEY_HERE",
+    "secret_key": "YOUR_ALPACA_SECRET_KEY_HERE",
+    "base_url": "https://paper-api.alpaca.markets"
+  },
+  "accounts": {
+    "A": {
+      "strategy": "EMA",
+      "capital_pct": 0.30,
+      "description": "Classic trend following"
+    },
+    "B": {
+      "strategy": "XGB", 
+      "capital_pct": 0.30,
+      "description": "Machine learning XGBoost"
+    },
+    "C": {
+      "strategy": "ACCOUNT_C_ML",
+      "capital_pct": 0.40,
+      "description": "Enhanced ML with news sentiment"
+    }
+  },
+  "risk_management": {
+    "max_position_size": 0.10,
+    "stop_loss_pct": 0.05,
+    "take_profit_pct": 0.15
+  },
+  "deployment": {
+    "environment": "paper",
+    "timezone": "US/Eastern",
+    "trading_hours": {
+      "start": "09:30",
+      "end": "16:00"
+    }
+  }
+}

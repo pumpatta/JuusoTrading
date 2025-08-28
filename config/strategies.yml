@@ -1,0 +1,27 @@
+# Capital is limited. Enable only what you can fund.
+# label: A=classic, B=ML, C=ML+external/features
+strategies:
+  - id: EMA
+    label: A
+    enabled: true
+    capital_pct: 0.30   # 30% of NAV
+  - id: XGB
+    label: B
+    enabled: true
+    capital_pct: 0.30
+  - id: ACCOUNT_C_ML
+    label: C
+    enabled: true
+    capital_pct: 0.40   # 40% - Advanced ML with news sentiment
+  # Legacy C strategies - disabled in favor of integrated ACCOUNT_C_ML
+  - id: HNS
+    label: C
+    enabled: false
+    capital_pct: 0.0
+  - id: ENSEMBLE
+    label: C
+    enabled: false
+    capital_pct: 0.0
+
+# Optional: fixed starting NAV if broker API not queried
+nav_start: 100000

@@ -1,0 +1,9 @@
+{
+  "account": "B",
+  "strategy": "TCN",
+  "model_file": "models\\B_TCN.model",
+  "trained_on": "SPY",
+  "n_rows": 2000,
+  "fitted": true,
+  "timestamp": "2025-08-28T07:36:04.577352"
+}

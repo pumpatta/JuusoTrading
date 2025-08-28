@@ -1,0 +1,11 @@
+# Optimization Configuration
+signal_thresholds:
+  xgb_min_prob: 0.6
+  tcn_min_prob: 0.65
+  min_momentum: 0.5
+  max_volatility: 2.0
+
+risk_filters:
+  max_drawdown_stop: 0.02
+  consecutive_loss_limit: 3
+  position_size_vol_adj: True

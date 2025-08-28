@@ -1,0 +1,9 @@
+timezone_local: Europe/Helsinki
+timezone_market: America/New_York
+regular_hours:
+  start: "09:30"   # ET
+  end:   "16:00"   # ET
+extended_hours:
+  premarket: "04:00-09:30"   # ET
+  afterhours: "16:00-20:00"  # ET
+use_extended: false
