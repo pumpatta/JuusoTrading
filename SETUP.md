@@ -137,3 +137,8 @@ pip install -r requirements.txt
 - Säännöllinen seuranta
 
 **ÄLÄ käytä oikeaa rahaa ilman kattavaa testausta!**
+
+## Päivitys (2025-08-28)
+
+- Repo sisältää nyt nopean offline-replay-tilan (`engine/live_offline.py`) joka tukee kiihtyvää (accelerated) ja non-blocking replayta sample-aineistolla. Hyvä debug-työkalu ennen markkinoiden aukeamista.
+- Model-tarkistus/korjaus-skriptit löytyvät `scripts/check_models_loadable.py` ja `scripts/repair_model_reports.py`.

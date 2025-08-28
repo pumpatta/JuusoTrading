@@ -90,3 +90,8 @@ python engine/live_offline.py --offline
 # Strategies config
 config/strategies.yml
 ```
+
+## Päivitys (2025-08-28)
+
+- Lisätty offline-kiihtyvä replay-tila (`engine/live_offline.py`) joka mahdollistaa nopean demon ja non-blocking testauksen sample-datalla.
+- Model-tarkistus- ja korjaustyökalut löytyvät `scripts/check_models_loadable.py` ja `scripts/repair_model_reports.py`.

@@ -344,3 +344,9 @@ python scripts/check_gpu.py
 ---
 Revised: 2025-08-27
 - Demo: `python scripts/backtest_bear.py` tulostaa 2022-regiimin ja ajaa nopean EMA-pseudotestin päivätasolla.
+
+## Updates (2025-08-28)
+
+- Added accelerated offline replay support (`engine/live_offline.py`) for fast, non-blocking testing with sample bars. Example: `python engine/live_offline.py --offline --symbols SPY --cycles 200 --accel --step 1`.
+- Added model validation and repair utilities in `scripts/`: `check_models_loadable.py` and `repair_model_reports.py` (supports pickle, joblib, xgboost, and torch load attempts).
+- Added guidance and a pre-live checklist to `AGENT_RUNBOOK.md` covering safety defaults, fee checks, and seeding for demo runs.

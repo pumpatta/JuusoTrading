@@ -129,5 +129,10 @@ python scripts/generate_sample_trades.py
 Ctrl+C molemmissa terminaaleissa
 ```
 
+## Päivitys (2025-08-28)
+
+- Dashboard integrates with the offline accelerated replay (`engine/live_offline.py`) for quick demo runs when markets are closed. Run the offline engine in another terminal and refresh the dashboard to view simulated trades.
+- Model-check utilities (`scripts/check_models_loadable.py`, `scripts/repair_model_reports.py`) are available to verify that deployed model artifacts are loadable before starting paper-live.
+
 ---
 **Valmis käyttöön! Dashboard näyttää reaaliaikaisesti portfoliosi suorituskyvyn vs. markkinaindeksit.** 🎉
