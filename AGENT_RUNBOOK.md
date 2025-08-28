@@ -163,6 +163,56 @@ python scripts/backtest_quick.py
 # (implement per-account model serialization)
 ```
 
+## Offline replay & accelerated demos (new)
+
+Use the offline engine to run fast replays against cached sample bars in `storage/sample_bars`. This is useful in the 4 hours before market open to validate models and safety rules.
+
+- Run a short demo (exits after cycles):
+```powershell
+.venv\Scripts\python.exe engine\live_offline.py --offline --symbols SPY --cycles 3 --sleep 3
+```
+
+- Seed a starting position so sell signals can execute in a demo:
+```powershell
+.venv\Scripts\python.exe engine\live_offline.py --offline --symbols SPY --cycles 1 --seed SPY:100
+```
+
+- Accelerated replay (fast, advance N bars per cycle):
+```powershell
+.venv\Scripts\python.exe engine\live_offline.py --offline --symbols SPY,QQQ --cycles 200 --accel --step 5 --seed SPY:500
+```
+
+- When using `--accel` the runner advances internal pointers over the historical bars and sleeps for ~0.01s between cycles so the replay completes quickly and does not block your terminal for long.
+
+Logs and artifacts produced by offline replays:
+- Trades: appended to `storage/intraday_backtest_trades.csv` and `storage/logs/trades_{strategy}.csv`
+- Analysis: `scripts/analyze_trades.py` writes `storage/trade_summary_per_strategy.csv` and `storage/trade_summary_per_symbol.csv`
+- Fee sensitivity: `scripts/simulate_trade_costs.py` writes `storage/trade_summary_with_fees_{bps}.csv`
+
+## Safety defaults and quick readiness checklist
+
+Safety defaults are in `utils/safety.py` and currently set to the Relaxed profile:
+- MAX_POS_PCT = 0.03 (3% of capital per symbol)
+- MAX_TOTAL_EXPOSURE_PCT = 0.3 (30% total exposure)
+- DAILY_LOSS_PCT = 0.10 (10% daily stop)
+- MAX_TRADES_PER_SYMBOL_DAY = 5
+
+Readiness quick-check (run these before switching to paper live):
+1) Confirm model artifacts exist for each strategy (check `models/` and the reports in `models/*.json`).
+2) Run accelerated offline replay with `--accel` across target symbols and review `storage/trade_summary_per_symbol.csv`.
+3) Run `scripts/simulate_trade_costs.py` and ensure results survive realistic fees (0.05%–0.2%).
+4) Use a small pilot allocation (0.25%–1% per trade) and a 1% stop-loss for the first trading day.
+5) Monitor logs in `storage/logs/` and build an alert for DAILY_LOSS_PCT breach.
+
+## Committing changes and pushing
+After making code or docs changes, commit and push from the repo root (one-line):
+```powershell
+git add . ; git commit -m "chore: docs/update runbook + offline replay flags" ; git push
+```
+
+---
+Revision: 2025-08-28
+
 ---
 Revision: 2025-08-27
 # or

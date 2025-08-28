@@ -16,6 +16,9 @@ from utils.execution import simulate_fills
 from strategies.ensemble import Ensemble
 from strategies.account_c_ml import AccountCStrategy
 from utils.strategies_cfg import load_plan
+from utils.safety import can_place_buy, daily_loss_breached, enforceable_stop_loss, can_trade_symbol, record_trade
+import json
+import os
 
 def now_utc(): return datetime.now(timezone.utc)
 
@@ -61,7 +64,23 @@ def main(paper: bool = True):
     }
     models = [registry[s.id] for s in plan.items if s.enabled and s.id in registry]
     symbols = ['SPY','QQQ','AAPL','MSFT','NVDA','AMZN','META','TSLA']
+    initial_capital = float(os.getenv('INITIAL_CAPITAL', '100000'))
+    # keep a quick portfolio value estimate (start = initial_capital)
+    portfolio_value = initial_capital
+
+    # per-day trade count tracking (reset on UTC midnight)
+    trade_counts: dict[str, int] = {}
+    last_reset = now_utc().date()
+
     while True:
+        # reset daily trade counts at UTC midnight
+        if now_utc().date() != last_reset:
+            trade_counts = {}
+            last_reset = now_utc().date()
+        # simple daily loss check
+        if daily_loss_breached(portfolio_value, initial_capital):
+            print('DAILY LOSS LIMIT BREACHED — stopping trading')
+            break
         end = now_utc(); start = end - timedelta(minutes=400)
         bars = get_bars(symbols, start, end, timeframe="1Min")
         for m in models:
@@ -75,15 +94,31 @@ def main(paper: bool = True):
                 if it['side'] == 'buy':
                     qty = float(it.get('qty', 1))
                     tp, sl = it.get('take_profit'), it.get('stop_loss')
+                    # enforce global/default stop loss if not provided
+                    if sl is None:
+                        sl = enforceable_stop_loss()
                     coid = f"{sid}_{sym}_{int(time.time())}_{random.randint(1000,9999)}"
                     if tp and sl:
                         try:
+                            # safety: check position sizing against initial capital
+                            cur_price = float(bars[sym].iloc[-1]['close']) if sym in bars else tp/1.015
+                            if not can_place_buy(initial_capital, cur_price, qty, initial_capital):
+                                print(f'Safety: buy rejected for {sym} qty={qty} by can_place_buy')
+                                continue
+                            if not can_trade_symbol(trade_counts, sym):
+                                print(f'Safety: buy rejected for {sym} — daily trade cap reached')
+                                continue
                             broker.buy_bracket(sym, qty, tp, sl, client_order_id=coid)
                             # Simuloidaan realistinen täyttöhinta nbbo_mid ~ current price
-                            nbbo_mid = float(bars[sym].iloc[-1]['close']) if sym in bars else tp/1.015
+                            nbbo_mid = cur_price
                             for fill in simulate_fills('buy', qty, nbbo_mid):
                                 book.update_on_fill(sid, sym, 'buy', fill.qty, fill.price)
                                 log_trade(sid, sym, 'buy', fill.qty, fill.price)
+                                # update portfolio value estimate conservatively
+                                portfolio_value -= fill.qty * fill.price
+                                # record this trade for daily cap
+                                from utils.safety import record_trade
+                                record_trade(trade_counts, sym)
                         except Exception as e:
                             print('order error', e)
                 elif it['side'] == 'sell':
