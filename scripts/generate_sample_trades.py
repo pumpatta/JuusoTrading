@@ -17,7 +17,7 @@ def generate_sample_trades():
     
     # Sample symbols and strategies
     symbols = ['SPY', 'QQQ', 'AAPL', 'MSFT', 'NVDA']
-    strategies = ['EMA', 'XGB']
+    strategies = ['EMA', 'XGB', 'ACCOUNT_C_ML']
     
     base_time = datetime.now() - timedelta(days=7)
     
