@@ -29,6 +29,7 @@ Status: aligned with `README.md` — keep both in sync when you change configs o
 **IMMEDIATE NEXT TASKS:**
 - [ ] Implement per-account model serialization (`models/{account}_{strategy}.model`)
 - [ ] Create per-account logging directories (`storage/logs/{account}/`)
+- [x] Create per-account logging directories (`storage/logs/{account}/`)
 - [ ] Add diagnostics harness (`scripts/diagnostics.py`)
 - [ ] Test live paper trading with actual Alpaca accounts
 
@@ -203,6 +204,31 @@ Readiness quick-check (run these before switching to paper live):
 3) Run `scripts/simulate_trade_costs.py` and ensure results survive realistic fees (0.05%–0.2%).
 4) Use a small pilot allocation (0.25%–1% per trade) and a 1% stop-loss for the first trading day.
 5) Monitor logs in `storage/logs/` and build an alert for DAILY_LOSS_PCT breach.
+
+## Model verification & repair (quick steps)
+
+1. Run the model loader checker to verify `models/*.json` point to loadable binaries:
+
+```powershell
+.venv\Scripts\python.exe scripts\check_models_loadable.py
+```
+
+2. If any reports fail, attempt automatic repair (the script will probe candidate files and update the `model_file` fields):
+
+```powershell
+.venv\Scripts\python.exe scripts\repair_model_reports.py
+```
+
+3. Re-run the checker and confirm all reports are OK. If a model still fails to load, inspect the file header (e.g., PyTorch zip, XGBoost native) and either re-serialize the model in a supported format or add a loader fallback.
+
+4. After models verify OK, run an accelerated offline replay across your target universe and then re-run `scripts/analyze_trades.py` + `scripts/simulate_trade_costs.py`.
+
+## Final pre-live checklist (one-line ready checks)
+
+- Confirm `scripts/check_models_loadable.py` returns OK for all `models/*.json`.
+- Run `engine/live_offline.py --offline --accel --cycles 200 --step 1` and validate trades survive realistic fees.
+- Set environment variables for conservative limits: `MAX_POS_PCT=0.01`, `DAILY_LOSS_PCT=0.05` for pilot.
+
 
 ## Committing changes and pushing
 After making code or docs changes, commit and push from the repo root (one-line):
