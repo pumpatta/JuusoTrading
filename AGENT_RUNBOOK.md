@@ -49,6 +49,10 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
+Note: some diagnostics/import checks may fail if the script is executed from a shell that does not include the repository root on `PYTHONPATH`. Run diagnostics from the repository root or use the script wrappers (they add the repo root to sys.path where needed).
+
+Remember to push your pilot-ready commits to remote before any paper-live run.
+
 3) Run a one-line sanity check to confirm Python version:
 ```powershell
 python -V
@@ -233,6 +237,39 @@ Readiness quick-check (run these before switching to paper live):
 - Run `engine/live_offline.py --offline --accel --cycles 200 --step 1` and validate trades survive realistic fees.
 - Set environment variables for conservative limits: `MAX_POS_PCT=0.01`, `DAILY_LOSS_PCT=0.05` for pilot.
 
+### Controlled paper-live pilot steps (safe, one-line actions)
+
+1. Push current code to remote and tag a pilot candidate:
+
+```powershell
+git add .; git commit -m "chore: pilot candidate"; git push
+```
+
+2. Configure `.env` with Alpaca PAPER keys (do not use live keys). Set conservative env overrides (example using PowerShell `setx`):
+
+```powershell
+setx MAX_POS_PCT 0.01
+setx DAILY_LOSS_PCT 0.05
+```
+
+3. Start offline accelerated replay and review results (fast):
+
+```powershell
+.venv\Scripts\python.exe engine\live_offline.py --offline --symbols SPY,QQQ --cycles 200 --accel --step 1 --seed SPY:100
+```
+
+4. If satisfied, start the live engine in paper mode with low capital allocation and monitor logs:
+
+```powershell
+.venv\Scripts\python.exe engine\live.py --paper
+```
+
+5. Monitor `storage/logs/` and alert on DAILY_LOSS_PCT breach. If breach occurs, stop live immediately:
+
+```powershell
+# stop trading (ensure you run from repo root):
+python stop_trading.py
+```
 
 ## Committing changes and pushing
 After making code or docs changes, commit and push from the repo root (one-line):
