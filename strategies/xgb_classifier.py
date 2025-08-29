@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import pickle
+import os
 from pathlib import Path
 from xgboost import XGBClassifier
 from strategies.base import Strategy
@@ -117,7 +118,10 @@ class XgbSignal(Strategy):
             proba = float(self.model.predict_proba(feats)[0,1])
             price = float(df.iloc[-1]['close'])
             if proba > 0.56 and regime != 'bear':
-                signals.append(dict(strategy_id=self.strategy_id, symbol=sym, side="buy", qty=1, take_profit=price*1.015, stop_loss=price*0.99))
+                # Calculate position size based on available capital and limits
+                max_pos_value = float(os.getenv('INITIAL_CAPITAL', '100000')) * 0.03  # 3% of capital
+                qty = max(1, int(max_pos_value / price))  # At least 1 share
+                signals.append(dict(strategy_id=self.strategy_id, symbol=sym, side="buy", qty=qty, take_profit=price*1.015, stop_loss=price*0.99))
             elif proba < 0.44:
                 signals.append(dict(strategy_id=self.strategy_id, symbol=sym, side="sell", qty=1))
         return signals

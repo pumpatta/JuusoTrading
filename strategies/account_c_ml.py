@@ -37,6 +37,9 @@ class AccountCStrategy:
         self.ensemble_strategy = None  # Will integrate directly
         self.news_strategy = EnhancedNewsStrategy()
         
+        # Disable news analysis to prevent startup crashes
+        self.news_disabled = True
+        
         # Strategy weights (can be adaptive)
         self.weights = {
             'news_sentiment': 0.4,
@@ -54,6 +57,11 @@ class AccountCStrategy:
         # Signal cache to avoid repeated calculations
         self.signal_cache = {}
         self.cache_duration = 300  # 5 minutes
+        
+        # Timeout tracking for news analysis
+        self.news_timeout_count = 0
+        self.max_news_timeouts = 3  # Disable news after 3 timeouts
+        self.news_disabled = False
         
         print(f"Account C Strategy initialized for {symbol}")
         print(f"Components: News Sentiment + Pattern Recognition + Ensemble")
@@ -117,7 +125,19 @@ class AccountCStrategy:
             return self._no_signal(f"Error: {e}")
     
     def _get_news_signal(self) -> Dict:
-        """Get news sentiment signal with caching"""
+        """Get news sentiment signal with caching and timeout protection"""
+        
+        # Skip news analysis if disabled
+        if self.news_disabled:
+            return {
+                'type': 'news_sentiment',
+                'action': 'hold',
+                'confidence': 0.0,
+                'strength': 0.0,
+                'position_size': 0.0,
+                'details': {'reason': 'News analysis disabled due to timeouts'},
+                'timestamp': time.time()
+            }
         
         cache_key = 'news_sentiment'
         now = time.time()
@@ -128,7 +148,55 @@ class AccountCStrategy:
             return self.signal_cache[cache_key]
         
         try:
-            news_data = self.news_strategy.get_market_sentiment_signal()
+            # Add timeout protection for news analysis using threading
+            import threading
+            
+            result = {'data': None, 'error': None}  # type: ignore
+            
+            def fetch_news():
+                try:
+                    news_data = self.news_strategy.get_market_sentiment_signal()
+                    result['data'] = news_data
+                except Exception as e:
+                    result['error'] = str(e)
+            
+            # Start news fetching in a separate thread
+            news_thread = threading.Thread(target=fetch_news)
+            news_thread.daemon = True
+            news_thread.start()
+            
+            # Wait for up to 30 seconds
+            news_thread.join(timeout=30)
+            
+            if news_thread.is_alive():
+                print("News analysis timed out, returning neutral signal")
+                self.news_timeout_count += 1
+                if self.news_timeout_count >= self.max_news_timeouts:
+                    self.news_disabled = True
+                    print(f"News analysis disabled after {self.news_timeout_count} timeouts")
+                news_data = {
+                    'signal': 'hold',
+                    'confidence': 0.0,
+                    'sentiment_score': 0.0,
+                    'reason': 'Analysis timeout'
+                }
+            elif result['error']:
+                print(f"News analysis error: {result['error']}")
+                news_data = {
+                    'signal': 'hold',
+                    'confidence': 0.0,
+                    'sentiment_score': 0.0,
+                    'reason': f'Analysis error: {result["error"]}'
+                }
+            else:
+                # Reset timeout count on successful analysis
+                self.news_timeout_count = 0
+                news_data = result['data'] if result['data'] is not None else {
+                    'signal': 'hold',
+                    'confidence': 0.0,
+                    'sentiment_score': 0.0,
+                    'reason': 'No data returned'
+                }
             
             # Convert to our signal format
             signal_data = {

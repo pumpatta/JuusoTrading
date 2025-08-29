@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 from strategies.base import Strategy
 from utils.regime import detect_regime
 from utils.config import SETTINGS
@@ -35,7 +36,10 @@ class EmaTrend(Strategy):
             cross_down = prev.ema_fast >= prev.ema_slow and last.ema_fast < last.ema_slow
             price = float(last['close'])
             if cross_up and regime != 'bear':
-                signals.append(dict(strategy_id=self.strategy_id, symbol=sym, side="buy", qty=1, take_profit=price*1.02, stop_loss=price*0.99))
+                # Calculate position size based on available capital and limits
+                max_pos_value = float(os.getenv('INITIAL_CAPITAL', '100000')) * 0.03  # 3% of capital
+                qty = max(1, int(max_pos_value / price))  # At least 1 share
+                signals.append(dict(strategy_id=self.strategy_id, symbol=sym, side="buy", qty=qty, take_profit=price*1.02, stop_loss=price*0.99))
             elif cross_down:
                 signals.append(dict(strategy_id=self.strategy_id, symbol=sym, side="sell", qty=1))
         return signals

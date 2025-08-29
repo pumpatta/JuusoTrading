@@ -114,7 +114,7 @@ def main_offline(symbols: list[str], cycles: int = 5, sleep_sec: int = 30, seed:
     # Strategy registry
     registry = {
         'EMA': EmaTrend(),
-        'XGB': XgbSignal(),
+    'XGB': XgbSignal(account='B'),
         'ACCOUNT_C_ML': AccountCStrategy('SPY'),
     }
 

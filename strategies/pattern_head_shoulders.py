@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 from strategies.base import Strategy
 from utils.regime import detect_regime
 
@@ -62,5 +63,8 @@ class HeadShoulders(Strategy):
                     if head < ls and head < rs:  # Inverted head and shoulders
                         if abs(ls - rs) / abs(head) < 0.03:  # Shoulders roughly equal
                             price = float(p.iloc[-1])
-                            sigs.append(dict(strategy_id=self.strategy_id, symbol=sym, side="buy", qty=1))
+                            # Calculate position size based on available capital and limits
+                            max_pos_value = float(os.getenv('INITIAL_CAPITAL', '100000')) * 0.03  # 3% of capital
+                            qty = max(1, int(max_pos_value / price))  # At least 1 share
+                            sigs.append(dict(strategy_id=self.strategy_id, symbol=sym, side="buy", qty=qty))
         return sigs

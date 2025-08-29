@@ -1,0 +1,28 @@
+{
+  "backtest_period": {
+    "start_date": "2025-03-01T00:00:00",
+    "end_date": "2025-08-27T00:00:00",
+    "duration_days": 179
+  },
+  "initial_capital": 100000,
+  "results": {
+    "Account A - EMA": {
+      "final_value": 106267.95993041992,
+      "total_return_pct": 6.267959930419931,
+      "num_trades": 21,
+      "profit_loss": 6267.959930419922
+    },
+    "Account B - XGB": {
+      "final_value": 106944.37957763672,
+      "total_return_pct": 6.944379577636717,
+      "num_trades": 1,
+      "profit_loss": 6944.379577636719
+    },
+    "Account C - Enhanced ML": {
+      "final_value": 101375.25180053711,
+      "total_return_pct": 1.3752518005371028,
+      "num_trades": 18,
+      "profit_loss": 1375.2518005371094
+    }
+  }
+}

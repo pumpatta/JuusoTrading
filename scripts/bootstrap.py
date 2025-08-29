@@ -28,7 +28,7 @@ try:
 	bars = get_bars(symbols, start, end, timeframe="1Min")
 	anchor = 'SPY' if 'SPY' in bars else (list(bars.keys())[0] if bars else None)
 	if anchor:
-		xgb = XgbSignal()
+		xgb = XgbSignal(account='B')
 		xgb.fit(bars[anchor])
 	else:
 		print('No bars returned; skipping model fit.')

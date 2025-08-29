@@ -3,6 +3,7 @@ import torch, torch.nn as nn
 torch._dynamo.config.disable = True
 import pandas as pd
 import numpy as np
+import os
 from pathlib import Path
 from strategies.base import Strategy
 from utils.regime import detect_regime
@@ -141,6 +142,10 @@ class TcnSignal(Strategy):
             with torch.no_grad(), torch.autocast(device_type=("cuda" if self.device=="cuda" else "cpu"), enabled=(self.device=="cuda")):
                 logit = self.model(X).item()
             prob = 1/(1+np.exp(-logit)); price = float(df.iloc[-1]['close'])
-            if prob > 0.56: sigs.append(dict(strategy_id=self.strategy_id, symbol=sym, side="buy", qty=1, take_profit=price*1.015, stop_loss=price*0.99))
+            if prob > 0.56: 
+                # Calculate position size based on available capital and limits
+                max_pos_value = float(os.getenv('INITIAL_CAPITAL', '100000')) * 0.03  # 3% of capital
+                qty = max(1, int(max_pos_value / price))  # At least 1 share
+                sigs.append(dict(strategy_id=self.strategy_id, symbol=sym, side="buy", qty=qty, take_profit=price*1.015, stop_loss=price*0.99))
             elif prob < 0.44: sigs.append(dict(strategy_id=self.strategy_id, symbol=sym, side="sell", qty=1))
         return sigs

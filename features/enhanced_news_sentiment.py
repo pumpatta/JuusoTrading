@@ -17,7 +17,8 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Tuple, Optional, Union
 import numpy as np
 import pandas as pd
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+# Lazy import for transformers to avoid slow startup
+# from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
@@ -39,17 +40,22 @@ class NewsDataCollector:
         self.last_fetch = {}
         
     def fetch_rss_feed(self, url: str, source_name: str) -> List[Dict]:
-        """Fetch and parse RSS feed"""
+        """Fetch and parse RSS feed with timeout"""
         try:
-            # Cache for 10 minutes
+            # Check cache first
             now = time.time()
-            if source_name in self.last_fetch and now - self.last_fetch[source_name] < 600:
+            if source_name in self.last_fetch and now - self.last_fetch[source_name] < 300:  # 5 min cache
                 return self.cache.get(source_name, [])
                 
-            feed = feedparser.parse(url)
+            # Use requests with timeout to avoid hanging
+            import requests
+            response = requests.get(url, timeout=5)  # 5 second timeout
+            response.raise_for_status()
+            
+            feed = feedparser.parse(response.content)
             articles = []
             
-            for entry in feed.entries[:20]:  # Top 20 articles
+            for entry in feed.entries[:10]:  # Reduced to 10 articles per source
                 article = {
                     'title': entry.get('title', ''),
                     'summary': entry.get('summary', entry.get('description', '')),
@@ -69,24 +75,34 @@ class NewsDataCollector:
             return []
     
     def get_all_news(self) -> List[Dict]:
-        """Fetch news from all sources"""
+        """Fetch news from all sources with timeout protection"""
         all_news = []
+        start_time = time.time()
+        max_time = 15  # Maximum 15 seconds for all news fetching
         
         for source_name, url in self.sources.items():
-            articles = self.fetch_rss_feed(url, source_name)
-            all_news.extend(articles)
-            time.sleep(0.5)  # Rate limiting
-            
+            if time.time() - start_time > max_time:
+                print(f"News fetching timeout reached ({max_time}s), stopping...")
+                break
+                
+            try:
+                articles = self.fetch_rss_feed(url, source_name)
+                all_news.extend(articles)
+                time.sleep(0.2)  # Reduced rate limiting
+            except Exception as e:
+                print(f"Failed to fetch from {source_name}: {e}")
+                continue
+        
         # Sort by timestamp (newest first)
         all_news.sort(key=lambda x: x['timestamp'], reverse=True)
-        return all_news[:50]  # Top 50 most recent
+        return all_news[:30]  # Return top 30 most recent articles
 
 class AdvancedSentimentAnalyzer:
     """Enhanced sentiment analysis with FinBERT and market correlation"""
     
     def __init__(self):
-        self.model: Optional[AutoModelForSequenceClassification] = None
-        self.tokenizer: Optional[AutoTokenizer] = None
+        self.model = None
+        self.tokenizer = None
         self.scaler = StandardScaler()
         self.market_correlation_model = RandomForestRegressor(n_estimators=50, random_state=42)
         self.sentiment_history = []
@@ -97,6 +113,8 @@ class AdvancedSentimentAnalyzer:
         """Load FinBERT model for financial sentiment"""
         if self.model is None:
             print("Loading FinBERT model...")
+            # Lazy import to avoid slow startup
+            from transformers import AutoTokenizer, AutoModelForSequenceClassification
             self.tokenizer = AutoTokenizer.from_pretrained("yiyanghkust/finbert-tone")
             self.model = AutoModelForSequenceClassification.from_pretrained("yiyanghkust/finbert-tone")
             self.model.eval()
@@ -418,7 +436,7 @@ class EnhancedNewsStrategy:
         self.analysis_cache_duration = 300  # 5 minutes
         
     def get_market_sentiment_signal(self, current_price: Optional[float] = None) -> Dict:
-        """Main method to get sentiment-based trading signal"""
+        """Main method to get sentiment-based trading signal with timeout protection"""
         
         # Check cache
         now = time.time()
@@ -427,7 +445,7 @@ class EnhancedNewsStrategy:
             return self.last_analysis
             
         try:
-            # Get latest news
+            # Get latest news with timeout protection
             print("Fetching latest financial news...")
             news_articles = self.news_collector.get_all_news()
             
@@ -439,7 +457,7 @@ class EnhancedNewsStrategy:
                     'reason': 'No news data available'
                 }
             
-            # Analyze sentiment
+            # Analyze sentiment with timeout
             print(f"Analyzing sentiment for {len(news_articles)} articles...")
             sentiment_analysis = self.sentiment_analyzer.analyze_news_batch(news_articles)
             

@@ -263,7 +263,7 @@ def create_performance_chart(portfolio_df: pd.DataFrame, benchmark_df: pd.DataFr
             row=1, col=1
         )
     
-    # Add benchmark indices
+    # Add benchmark indices - rebase to portfolio baseline so all series start at 100
     colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4']
     benchmark_names = {
         '^IXIC': 'NASDAQ',
@@ -271,20 +271,54 @@ def create_performance_chart(portfolio_df: pd.DataFrame, benchmark_df: pd.DataFr
         'SPY': 'SPY ETF',
         'QQQ': 'QQQ ETF'
     }
-    
+
+    # baseline date: use portfolio first date if available, otherwise today
+    if not portfolio_df.empty and 'date' in portfolio_df.columns and len(portfolio_df) > 0:
+        baseline_dt = pd.to_datetime(portfolio_df['date'].iloc[0])
+    else:
+        baseline_dt = pd.Timestamp.now().normalize()
+
+    def rebase_series_to_baseline(series: pd.Series, baseline: pd.Timestamp):
+        # Find the first available point on/after baseline
+        try:
+            series = series.dropna()
+            if series.empty:
+                return None
+            after = series[series.index >= baseline]
+            if len(after) > 0:
+                val = after.iloc[0]
+                return (series.loc[after.index[0]:] / val) * 100
+            # fallback: use nearest previous value
+            prev_idx = series.index[series.index <= baseline]
+            if len(prev_idx) > 0:
+                val = series.loc[prev_idx[-1]]
+                return (series.loc[prev_idx[-1]:] / val) * 100
+            # last resort: normalize to first available
+            val = series.iloc[0]
+            return (series / val) * 100
+        except Exception:
+            return None
+
     for i, (symbol, data) in enumerate(benchmark_df.items()):
-        if len(data.dropna()) > 0:
+        try:
+            if len(data.dropna()) == 0:
+                continue
             display_name = benchmark_names.get(str(symbol), str(symbol))
+            rebased = rebase_series_to_baseline(data, baseline_dt)
+            if rebased is None or rebased.empty:
+                continue
             fig.add_trace(
                 go.Scatter(
-                    x=data.index,
-                    y=data.values,
+                    x=rebased.index,
+                    y=rebased.values,
                     name=f'Vertailu: {display_name}',
                     line=dict(color=colors[i % len(colors)], width=2, dash='dash'),
                     hovertemplate='%{y:.2f}<extra></extra>'
                 ),
                 row=1, col=1
             )
+        except Exception:
+            continue
     
     # Daily returns
     if not portfolio_df.empty and 'daily_return' in portfolio_df.columns:

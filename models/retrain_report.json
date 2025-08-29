@@ -1,5 +1,6 @@
 {
   "model": "xgb_anchor",
+  "model_file": "models\\xgb_anchor",
   "trained_on": "SPY",
   "n_rows": 2000,
   "fitted": true

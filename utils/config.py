@@ -23,9 +23,14 @@ class Settings:
     key_id: str = ''
     secret_key: str = ''
     base_url: str = os.getenv('ALPACA_BASE_URL', 'https://paper-api.alpaca.markets')
-    data_feed: str = os.getenv('DATA_FEED', 'iex')
+    data_feed: str = os.getenv('DATA_FEED', '')
     starting_money: float = float(os.getenv('STARTING_MONEY', '100000'))
     model_id: str = ''
+
+    @property
+    def market_data_base(self):
+        """Return the market data API base URL - always use live data API for market data"""
+        return 'https://data.alpaca.markets'
 
     def __post_init__(self):
         kid, sk = _select_account(self.account)
